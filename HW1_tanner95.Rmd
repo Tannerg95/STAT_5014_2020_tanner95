@@ -1,0 +1,116 @@
+---
+title: "HW1"
+author: "Tanner Glass"
+date: "8/22/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Problem 1
+
+No submission required, Primers are complete.
+
+# Problem 2
+
+### Part A
+
+I am looking forward to my return to Virginia Tech as well as my return to Virginia Tech's computing and coding programs.  As an undergraduate in Statistics, I took the time to get an intermediate use of R under my belt.  I would like to focus more this year on making my work that I produce more professional as well as making it a publishable standard. As far as content, I am happy to jump into high level practices such as:
+
+\begin{itemize}
+\item Deep learning tactics
+\item Bayesian Computing methods vs. frequentist approach \begin{itemize}
+\item Time and efficiency between the two
+\item Choosing which approach is most optimal
+\end{itemize}
+\item Compiling files into a tidy data set and compiling from internet data sources through code. (Webscraping)
+\end{itemize}
+
+### Part B
+
+I have included three density functions below. Note the following use the Gamma function which is defined as follows
+\begin{equation}
+\Gamma(\alpha) = \int_{0}^{\infty} t^{\alpha-1}e^{-t} dt
+\nonumber
+\end{equation}
+
+I present the Chi squared, F, and Gamma, PDFs respectively as such.
+\begin{eqnarray}
+f(x|p) &=&    \frac{1}{\Gamma(p/2)2^{(p/2)}} x^{(p/2)-1}e^{-x/2}; \ 0 \leq x < \infty ; \ p=1,2,... \\
+f(x|\nu_1,\nu_2) &=& \frac{\Gamma(\frac{\nu_1+\nu_2}{2})}{\Gamma(\frac{\nu_1}{2})\Gamma(\frac{\nu_2}{2})}(\frac{\nu_2}{\nu_1})^{\nu_1/2}  \frac{x^{(\nu_1-2)/2}}{(1+(\frac{\nu_1}{\nu_2})x)^{(\nu_1+\nu_2)/2}};  \ 0 \leq x < \infty; \ \nu_1,\nu_2=1,2,... \\ 
+f(x|\alpha, \beta) &=& \frac{1}{\Gamma(\alpha)\beta^\alpha}x^{\alpha-1}e^{-x/\beta}; \ 0 \leq x < \infty ; \ \alpha,\beta >0
+\end{eqnarray}
+
+# Problem 3
+
+From this article regarding reproducible research, taking action to ensure that your data is compatible with other researchers is taking the steps to ensure that a researcher can take your data and produce the exact same results.  The article consolidates this ideal down into 10 rules.  They are as follows:
+\begin{enumerate}
+\item For Every Result, Keep Track of How It Was Produced
+\item Avoid Manual Data Manipulation Steps
+\item Archive the Exact Versions of All External Programs Used
+\item Version Control All Custom Scripts
+\item Record All Intermediate Results, When Possible in Standardized Formats
+\item For Analyses That Include Randomness, Note Underlying Random Seeds
+\item Always Store Raw Data behind Plots
+\item Generate Hierarchical Analysis Output, Allowing Layers of Increasing Detail to Be Inspected
+\item Connect Textual Statements to Underlying Results
+\item Provide Public Access to Scripts, Runs, and Results
+\end{enumerate}
+
+With these rules and why they are suggested is because there can be challenges with the data sets that must be considered.  I shall correspond a comment for each of the rules.
+
+\begin{enumerate}
+\item It can be hard to discover how the data was produced if it isn't outlined with the data set.
+\item This could be hard to do if the data frame has a lack of structure or missing data points.
+\item Programs can be from different libraries non-native to the base programming.  So ensuring that those extra packages are archived can be a challenge.
+\item Custom scripts may be hard to decipher by other users
+\item We want to record them, but not display EVERY result made through the computation, noting it for those he wish to find it, but not bombarding the researchers with possibly non-important intermediate results.
+\item Setting seeds can be a challenge to ensure EVERY random process in your code is set.  Its easy to forgot one line that may have a variation, even if you set a seed for another line.
+\item If it isn't stored, the research will have to pull in themselves, and it may be edited from when it was originally pulled.  Making sure the data set is available for the researcher is a challenge.
+\item The challenge is making this hierarchical model and then explaining it for the researcher to understand what is being produced.
+\item If the researcher cant decipher your code from what is written, its hard to declare your research as reproducible.  The reference should allow and point to the code on what the research is exactly doing, line by line.
+\item The challenge here is making your scripts and such public.  Sometimes the research has restrictions where it may not be allowed to be made public by a company or firm.  The challenge is to making it publicly accessible.
+\end{enumerate}
+
+
+# Problem 4
+
+For this problem, I have decided to choose the data set "Trees".  The data set contains data regarding black cherry trees.  The data set is in a data frame format with 31 observations and 3 variables.  They are Girth, Height, and Volume respectively.  I use this data set to create a simple scatter plot and histogram.  Let us view the first 10 observations.  Then proceed to create our visuals. 
+
+$\\$
+
+$\\$
+
+```{r, echo=FALSE}
+library(knitr)
+kable(trees[1:10,],align = "c", caption = "Cherry Trees")
+
+```
+
+$\\$
+$\\$
+
+```{r, echo=FALSE}
+plot(trees$Girth,trees$Height,xlab = "Tree Girth in Inches", ylab = "Tree Height in Feet",
+     main = "Tree Height vs Girth", col=5,type = "p")
+```
+
+
+$\\$
+$\\$
+I made this plot to do a quick observation regarding the correlation of height and diameter.  There seems to be a weak positive correlation between the two variables and thus analysis via simple linear regression would be a next step.
+
+
+
+
+```{r, echo=FALSE}
+hist(trees$Volume, main = "Histogram of Tree Volume",col ="brown", xlab = "Tree Volume in Cubic Feet")
+
+```
+
+
+
+
+As can be seen for the graph, There seems to be a gathering of most trees staying relatively small.  Some trees were recorded to be larger which causes a right skew trend.  
