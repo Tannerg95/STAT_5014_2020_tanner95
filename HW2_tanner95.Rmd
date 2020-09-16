@@ -1,0 +1,268 @@
+---
+title: "HW2"
+author: "Tanner Glass"
+date: "9/3/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Problem 3
+
+In the lecture, there were two links to StackOverflow questions on why one should use version control.  In your own words, summarize your thoughts (2-3 sentences) on version control in your future work.  No penalties here if you say, useless!
+
+
+When it comes to version control I can see this to be a really great tool for collaborators.  When working in a group there are times (most of the time actually...) where members have deferring ideas.  Instead of having to have a vote on which way to go, it possible to use version control to create two possible routes off a base version.  That way, the original code can be preserved and then we can have to paths to find out which way is optimal.  
+
+## Problem 4
+
+In this exercise, you will import, munge, clean and summarize datasets from Wu and Hamada's _Experiments: Planning, Design and Analysis_ book you will use in the Spring.  For each dataset, you should perform the cleaning 2x: first with base R functions (ie no dplyr, piping, etc), second using tidyverse function.  Make sure you weave your code and text into a complete description of the process and end by creating a tidy dataset describing the variables, create a summary table of the data (summary, NOT full listing), note issues with the data, and include an informative plot.  
+
+### Part A
+
+a. Sensory data from five operators.  -- see video, I am doing this one    
+<http://www2.isye.gatech.edu/~jeffwu/wuhamadabook/data/Sensory.dat> 
+
+We will read in the data first using the link above.  Once read in, we will observe the first few operations.
+
+```{r sensory_import}
+#install.packages("data.table")
+#fread used in lecture, similar to base r function read.table
+library("data.table")
+
+# url is here --> http://www2.isye.gatech.edu/~jeffwu/wuhamadabook/data/Sensory.dat 
+
+url <- "http://www2.isye.gatech.edu/~jeffwu/wuhamadabook/data/Sensory.dat"
+#sensory_data_raw <- fread(url,fill= TRUE,header = TRUE, skip = 1)
+#saveRDS(sensory_data_raw, "sensory_data_raw.RDS")
+sensory_data_raw <-readRDS("sensory_data_raw.RDS")
+head(sensory_data_raw)
+
+```
+Yikes.  From a pure pull, we see some major issues with the data frame.  The data is intended to be given as 15 observations.  Each Operator is supposed to have 3 observations per item.  Operator 1 has the 1st, 6th, and 11th observation and so on for the four operators. The goal will be to extra the item numbers which are consisted within the first vector, and the compile the rest via each operator.
+
+```{r} 
+data<-c()
+for (i in 1:nrow(sensory_data_raw))
+{
+  data<-c(data,as.numeric(sensory_data_raw[i,]))
+}
+data<-data[!is.na(data)] #for loop gets rid of NAs
+remove<-c()
+for (i in seq(from=0, to=length(data), by=16))
+{
+  remove<-c(remove,i+1) #removes item numbers
+  #mixed in data
+}
+data<- data[-remove]
+df<-data.frame(rep(0,15))
+for (n in 0:((length(data)/15-1)))
+{ #extracts 15 obs per item
+  df<-cbind(df,data[(15*n+1):(15*(n+1))])
+}
+df<-df[,-1]
+df2<- data.frame(rep(0,3))
+for (k in 1:10)
+{#assigns item and operator to each eval
+for (j in 1:5)
+{
+  assign(paste0("item_",k,"_operator_",j),df[seq((0+j), to=15, by=5),k])
+  df2<-cbind(df2,eval(as.name(paste0("item_",k,"_operator_",j))))
+  names(df2)[(5*(k-1)+j+1)] <- paste0("Item_",k,"_Operator_",j) 
+}#names each column
+}
+df2<-df2[,-1]
+
+df2
+```
+
+
+
+We have achieved a tidy data set using base R functions.  Note that there are two factors in this data.  Operator and Item, we simply create a variable for each of them and observed the three observations that they each cover.  Now to use dplyr.
+
+```{r}
+#install.packages('dplyr')
+#install.packages('tidyr')
+library("dplyr")
+library("tidyr") 
+
+
+data2<-c()
+for (i in 1:nrow(sensory_data_raw))
+{
+  data2<-c(data,as.numeric(sensory_data_raw[i,]))
+}
+data2<-data2[!is.na(data)] #for loop gets rid of NAs
+remove2<-c()
+for (i in seq(from=0, to=length(data), by=16))
+{
+  remove2<-c(remove2,i+1) #removes item numbers
+  #mixed in data
+}
+data2<- data2[-remove]
+df3<-dplyr::data_frame(rep(0,15))
+for (n in 0:((length(data)/15-1)))
+{ #extracts 15 obs per item
+  df3<-cbind(df3,data[(15*n+1):(15*(n+1))])
+}
+df3<-df3[,-1]
+df4<- dplyr::data_frame(rep(0,3))
+for (k in 1:10)
+{#assigns item and operator to each eval
+for (j in 1:5)
+{
+  assign(paste0("item_",k,"_operator_",j),df3[seq((0+j), to=15, by=5),k])
+  df4<-cbind(df4,eval(as.name(paste0("item_",k,"_operator_",j))))
+  names(df4)[(5*(k-1)+j+1)] <- paste0("Item_",k,"_Operator_",j) 
+}
+}
+sensory_data_tidyr<-select(df4,2:51)
+
+sensory_data_tidyr
+```
+We have accomplished organizing the data.  Dyplr and Tidyr have similar commands for data frame building and selecting columns you need for organization.  There is a rename function in the packages but using the for loop in Base R still proved to be more optimal.
+
+### Part B
+
+b. Gold Medal performance for Olympic Men's Long Jump, year is coded as 1900=0.  
+<http://www2.isye.gatech.edu/~jeffwu/wuhamadabook/data/LongJumpData.dat>  
+
+
+```{r Gold_Medal}
+url_b <-"http://www2.isye.gatech.edu/~jeffwu/wuhamadabook/data/LongJumpData.dat"
+
+#jump_data_raw<-fread(url_b,fill = TRUE,header = FALSE,skip = 1)
+#saveRDS(jump_data_raw, "jump_data_raw.RDS")
+jump_data_raw <-readRDS("jump_data_raw.RDS")
+jump_data_raw
+```
+Since the header contained mulitple words for column names and mulptiple colomuns for different observations, it was best to read in without that top line and add in later on.  We understand the two variables as year and the jump record.  We will notw create a tidy data set in R.
+```{r gold_data_tidy}
+year<-c(jump_data_raw$V1,jump_data_raw$V3,jump_data_raw$V5,jump_data_raw$V7[1:4])#concatenate all years
+jump <-c(jump_data_raw$V2,jump_data_raw$V4,jump_data_raw$V6,jump_data_raw$V8[1:4])#concatenate all jump records
+
+jump_data_tidy<-data.frame(year,jump)
+jump_data_tidy$year<-jump_data_tidy$year+1900
+jump_data_tidy
+```
+By concatenation, we create a data frame that is set to standard.  Now using dplyr and tidyr.
+
+```{r}
+
+library("dplyr")
+library("tidyr")  
+
+jump_data_tidyr<-dplyr::data_frame(Year=c(jump_data_raw$V1,jump_data_raw$V3,jump_data_raw$V5,jump_data_raw$V7),Jump=c(jump_data_raw$V2,jump_data_raw$V4,jump_data_raw$V6,jump_data_raw$V8))
+
+#function does not work with pipelining,
+
+jump_data_tidyr %>%
+  slice(1:22) ->jump_data_tidyr
+
+
+jump_data_tidyr$Year<-  jump_data_tidyr$Year+1900 
+
+jump_data_tidyr
+```
+
+### Part C
+
+c. Brain weight (g) and body weight (kg) for 62 species.    
+<http://www2.isye.gatech.edu/~jeffwu/wuhamadabook/data/BrainandBodyWeight.dat>  
+```{r}
+url_c <-"http://www2.isye.gatech.edu/~jeffwu/wuhamadabook/data/BrainandBodyWeight.dat"
+
+weight_data_raw<-fread(url_c,fill = TRUE,header = FALSE,skip = 1)
+
+weight_data_raw
+```
+ Similar set up to part b, I will concatenate each variable in which are related.
+
+```{r}
+body_wt<-c(weight_data_raw$V1,weight_data_raw$V3,weight_data_raw$V5)
+
+brain_wt<-c(weight_data_raw$V2,weight_data_raw$V4,weight_data_raw$V6)
+
+weight_data_tidy<-data.frame(body_wt,brain_wt)
+
+weight_data_tidy<- weight_data_tidy[-63,]
+weight_data_tidy
+
+```
+Now for using tidyverse.
+```{r}
+weight_data_tidyr<- data_frame(body_wt=c(weight_data_raw$V1,weight_data_raw$V3,weight_data_raw$V5),brain_wt=c(weight_data_raw$V2,weight_data_raw$V4,weight_data_raw$V6))
+weight_data_tidyr<-slice(weight_data_tidyr,1:62)
+weight_data_tidyr
+
+```
+Easily enough, datasets using both base r and tidyverse functions are obtained.
+
+### Part D
+
+d. Triplicate measurements of tomato yield for two varieties of tomatos at three planting densities.  
+<http://www2.isye.gatech.edu/~jeffwu/wuhamadabook/data/tomato.dat>  
+
+
+```{r}
+url_d <-"http://www2.isye.gatech.edu/~jeffwu/wuhamadabook/data/tomato.dat"
+
+tomato_data_raw<-fread(url_d)
+
+tomato_data_raw
+
+```
+We will now use base r funcions to clean up the data set.
+
+
+```{r}
+tomato_data_tidy<- tomato_data_raw[,2:4]
+tomato_data_tidy2<- data.frame(rep(0,3))
+for (v in 1:3)
+{
+  for (w in 1:2)
+  {
+   new_measurements<- as.numeric(unlist((strsplit(as.character(tomato_data_tidy[w,]),split = ","))))[((v-1)*3+1):(v*3)]
+   tomato_data_tidy2<-data.frame(tomato_data_tidy2,new_measurements)
+  }
+}
+
+
+
+tomato_data_tidy2<-tomato_data_tidy2[,-1]
+names(tomato_data_tidy2)<-c("10000_IFE","10000_Pusa","20000_IFE","20000_Pusa","30000_IFE","30000_Pusa")
+tomato_data_tidy2
+ 
+```
+
+
+
+We have successfully tidied the data using base R.  Now to the Tidyverse.
+
+
+```{r}
+
+tomato_data_raw %>%
+  select("10000","20000","30000")->tomato_data_tidyr
+
+tomato_data_tidyr2<- dplyr::data_frame(rep(0,3))
+for (v in 1:3)
+{
+  for (w in 1:2)
+  {
+   new_measurements<- as.numeric(unlist((strsplit(as.character(tomato_data_tidyr[w,]),split = ","))))[((v-1)*3+1):(v*3)]
+   tomato_data_tidyr2<-data.frame(tomato_data_tidyr2,new_measurements)
+  }
+}
+tomato_data_tidyr2<-select(tomato_data_tidyr2,2:7)
+tomato_data_tidyr2<- rename(tomato_data_tidyr2,"10000_IFE"=new_measurements,"10000_Pusa"=new_measurements.1,"20000_IFE"=new_measurements.2,"20000_Pusa"=new_measurements.3,"30000_IFE"=new_measurements.4,"30000_Pusa"=new_measurements.5)
+
+tomato_data_tidyr2
+```
+
+
+We have achieved tidying the data using tidyverse functions.
+
